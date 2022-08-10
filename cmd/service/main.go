@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"store/pkg/config"
 	"store/pkg/redis"
 	"store/services/domain/user/delivery/http"
 	"store/services/domain/user/usecase"
 	"store/services/repository/mgo"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -30,7 +32,7 @@ func main() {
 	userCollection := client.Database("store").Collection("users")
 
 	r := gin.Default()
-
+	InitCors(r)
 	group := r.Group("/api/v1")
 
 	userRepo := mgo.NewUserRepository(ctx, userCollection, redis)
@@ -46,4 +48,17 @@ func main() {
 	if err := r.Run(":" + config.PORT); err != nil {
 		panic(err)
 	}
+}
+
+func InitCors(r *gin.Engine) {
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowHeaders: []string{
+			"*",
+			"Origin",
+			"Content-Length",
+			"Content-Type",
+			"Authorization",
+		},
+	}))
 }
